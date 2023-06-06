@@ -1,9 +1,9 @@
 #R course
-
+ 
 #Clear existing data and graphics
 rm(list=ls())
 graphics.off()
- 
+  
 #load libraries
 library(stringi)
 library(tidyverse)
