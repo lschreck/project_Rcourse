@@ -14,7 +14,7 @@ format:
 
 ## Introduction
 
-We wanted to study if PSA values differ by tumor stage.
+Prostate-specific antigen (PSA) is a protein made by the prostate gland. The amount of PSA may be higher in men who have prostate cancer. We wanted to study if PSA values differ by prostate cancer tumor stage.
 
 #### **Aim**
 
@@ -45,12 +45,12 @@ blood <- medicaldata::blood_storage
 
 #### **Data cleaning**
 
-We changed the variable class of tumor stage to a factor.
+We changed the variable class of tumor stage to a factor and excluded missing values for tumor stage and PSA.
 
 ```{r}
 #| output: false
 blood <- blood |> mutate(T.Stage = factor(T.Stage, levels=c(1,2), labels=c("low","high")))
-
+blood <- blood |> filter(!is.na(T.Stage)) |> filter(!is.na(PreopPSA))
 ```
 
 #### Descriptive table
@@ -69,7 +69,9 @@ tabl_summary<-
 tabl_summary
 ```
 
-We visualized the continuous variables with box plots.
+#### Visualization
+
+We visualized the continuous variables age and PSA with box plots.
 
 ```{r}
 plot0 <- ggplot(blood, aes(y=Age)) + 
@@ -78,6 +80,50 @@ plot0 <- ggplot(blood, aes(y=Age)) +
         theme_minimal()+
     theme(axis.text.x = element_blank())
 plot0
+
+plota <- ggplot(blood, aes(y=PreopPSA)) + 
+    geom_boxplot() + 
+    ylab("PSA") +
+        theme_minimal()+
+    theme(axis.text.x = element_blank())
+plota
+
+```
+
+#### Normality
+
+We check for normality. PSA does not seem to be normally distributed.
+
+```{r}
+shapiro.test(blood$PreopPSA)
+
+blood %>%
+  ggplot(aes(sample = PreopPSA)) + 
+  geom_qq_line(distribution = stats::qnorm) +
+  geom_qq(color = "skyblue", distribution = stats::qnorm)
+plot2 <- blood %>%
+  ggplot(aes(PreopPSA)) +
+  geom_histogram(fill = "skyblue",
+                 bins = 20) +
+  theme_bw()
+plot2
+```
+
+#### Analysis
+
+We checked the difference between PSA levels in high and low stage prostate cancer.
+
+```{r}
+tabl_summary2<-
+  blood |>
+    select(Age, PreopPSA, T.Stage) |>
+  tbl_summary(
+    by = T.Stage,
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c("{mean} ({sd})", 
+                                     "{median} ({p25}, {p75})", 
+                                     "{min}, {max}"))
+tabl_summary2
 
  plot1 <- ggplot(blood, aes(y=PreopPSA, fill=T.Stage)) + 
     geom_boxplot() + 
@@ -90,23 +136,7 @@ plot0
  plot1
 ```
 
-We check for normality. The PSA does not seem to be normally distributed.
-
-```{r}
-shapiro.test(blood$PreopPSA)
-blood %>%
-  ggplot(aes(sample = PreopPSA)) + 
-  geom_qq_line(distribution = stats::qnorm) +
-  geom_qq(color = "skyblue", distribution = stats::qnorm)
-plot2 <- blood %>%
-  ggplot(aes(PreopPSA)) +
-  geom_histogram(fill = "skyblue",
-                 bins = 10) +
-  theme_bw()
-plot2
-```
-
-We perform a Wilcoxon rank sum test to compare the PSA levels in both tumor stages groups.
+We performed a Wilcoxon rank sum test to compare the PSA levels in both tumor stage groups.
 
 ```{r}
 wilcox.test(blood$PreopPSA[blood$T.Stage=="low"], blood$PreopPSA[blood$T.Stage=="high"])
