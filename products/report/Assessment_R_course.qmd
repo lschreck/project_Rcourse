@@ -9,15 +9,16 @@ format:
     code-tools: true
     df-print: paged
     embed-resources: true
+    warning: false
 ---
 
 ## Introduction
 
-We wanted to study if PSA values differ by tumor tage.
+We wanted to study if PSA values differ by tumor stage.
 
 #### **Aim**
 
-In a first step, we aim to describe age, preoperative PSA values and tumor stage and in a second step, assess if preoperative PSA values change by tumor stage.
+In a first step, we aimed to describe age, preoperative PSA values and tumor stage and in a second step, we assessed if preoperative PSA values differ by tumor stage.
 
 ## Data
 
@@ -34,7 +35,7 @@ library(readr)
 library(medicaldata)
 ```
 
-We load the "blood_storage" data set from the package "medicaldata". This data set contains data on 316 men who had undergone radical prostatectomy and received transfusion during or within 30 days of the surgical procedure and had available prostate serum antigen (PSA) follow-up data.
+We loaded the "blood_storage" data set from the package "medicaldata". This data set contains data on 316 men who had undergone radical prostatectomy and received transfusion during or within 30 days of the surgical procedure and had available prostate serum antigen (PSA) data.
 
 ```{r}
 #| output: false
@@ -44,7 +45,7 @@ blood <- medicaldata::blood_storage
 
 #### **Data cleaning**
 
-We change the variable class of tumor stage.
+We changed the variable class of tumor stage to a factor.
 
 ```{r}
 #| output: false
@@ -68,9 +69,16 @@ tabl_summary<-
 tabl_summary
 ```
 
-We visualize the continuous variables with box plots.
+We visualized the continuous variables with box plots.
 
 ```{r}
+plot0 <- ggplot(blood, aes(y=Age)) + 
+    geom_boxplot() + 
+    ylab("Age (years)") +
+        theme_minimal()+
+    theme(axis.text.x = element_blank())
+plot0
+
  plot1 <- ggplot(blood, aes(y=PreopPSA, fill=T.Stage)) + 
     geom_boxplot() + 
     ylab("PSA") +
@@ -79,6 +87,7 @@ We visualize the continuous variables with box plots.
     theme(axis.text.x = element_blank())+
     scale_fill_manual(
     values = c("skyblue", "red"))
+ plot1
 ```
 
 We check for normality. The PSA does not seem to be normally distributed.
@@ -97,11 +106,13 @@ plot2 <- blood %>%
 plot2
 ```
 
+We perform a Wilcoxon rank sum test to compare the PSA levels in both tumor stages groups.
+
 ```{r}
 wilcox.test(blood$PreopPSA[blood$T.Stage=="low"], blood$PreopPSA[blood$T.Stage=="high"])
 
 ```
 
-There is little evidence that the preoperative PSA levels differ by tumor stage.
-
 ## Conclusion
+
+There is little evidence that the preoperative PSA levels differ by tumor stage.
