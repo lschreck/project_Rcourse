@@ -1,0 +1,107 @@
+---
+title: "R course - Do PSA values differ by tumor stage?"
+date: "6/16/2023"
+author: "Leonie Schreck"
+editor: visual
+format:
+  html:
+    code-fold: show
+    code-tools: true
+    df-print: paged
+    embed-resources: true
+---
+
+## Introduction
+
+We wanted to study if PSA values differ by tumor tage.
+
+#### **Aim**
+
+In a first step, we aim to describe age, preoperative PSA values and tumor stage and in a second step, assess if preoperative PSA values change by tumor stage.
+
+## Data
+
+We used the following R libraries.
+
+```{r}
+#| output: false
+library(lubridate)
+library(ggplot2)
+library(here)
+library(gtsummary)
+library(tidyverse)
+library(readr)
+library(medicaldata)
+```
+
+We load the "blood_storage" data set from the package "medicaldata". This data set contains data on 316 men who had undergone radical prostatectomy and received transfusion during or within 30 days of the surgical procedure and had available prostate serum antigen (PSA) follow-up data.
+
+```{r}
+#| output: false
+blood <- medicaldata::blood_storage
+
+```
+
+#### **Data cleaning**
+
+We change the variable class of tumor stage.
+
+```{r}
+#| output: false
+blood <- blood |> mutate(T.Stage = factor(T.Stage, levels=c(1,2), labels=c("low","high")))
+
+```
+
+#### Descriptive table
+
+A descriptive table of our three variables of interest can be found below:
+
+```{r}
+tabl_summary<-
+  blood |>
+    select(Age, PreopPSA, T.Stage) |>
+  tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c("{mean} ({sd})", 
+                                     "{median} ({p25}, {p75})", 
+                                     "{min}, {max}"))
+tabl_summary
+```
+
+We visualize the continuous variables with box plots.
+
+```{r}
+ plot1 <- ggplot(blood, aes(y=PreopPSA, fill=T.Stage)) + 
+    geom_boxplot() + 
+    ylab("PSA") +
+    facet_wrap(~T.Stage) +
+    theme_minimal()+
+    theme(axis.text.x = element_blank())+
+    scale_fill_manual(
+    values = c("skyblue", "red"))
+```
+
+We check for normality. The PSA does not seem to be normally distributed.
+
+```{r}
+shapiro.test(blood$PreopPSA)
+blood %>%
+  ggplot(aes(sample = PreopPSA)) + 
+  geom_qq_line(distribution = stats::qnorm) +
+  geom_qq(color = "skyblue", distribution = stats::qnorm)
+plot2 <- blood %>%
+  ggplot(aes(PreopPSA)) +
+  geom_histogram(fill = "skyblue",
+                 bins = 10) +
+  theme_bw()
+plot2
+```
+
+```{r}
+wilcox.test(blood$PreopPSA[blood$T.Stage=="low"], blood$PreopPSA[blood$T.Stage=="high"])
+
+```
+
+There is little evidence that the preoperative PSA levels differ by tumor stage.
+
+## Conclusion

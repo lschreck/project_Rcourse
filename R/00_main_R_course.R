@@ -3,7 +3,7 @@
 #Clear existing data and graphics
 rm(list=ls())
 graphics.off()
-  
+   
 #load libraries
 library(stringi)
 library(tidyverse)
@@ -169,4 +169,7 @@ ggplot(insurance, aes(x=smoker, y=charges))+
 #fifth graph
 ggplot(insurance, aes(x=charges, y=smoker))+
   geom_boxplot()
+
+####
+##Thursday
 
